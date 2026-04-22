@@ -1,0 +1,14 @@
+*.class
+*.log
+.metadata/
+.settings/
+.project
+.classpath
+bin/
+target/
+build/
+.idea/
+.vscode/
+*.war
+node_modules/
+.env
