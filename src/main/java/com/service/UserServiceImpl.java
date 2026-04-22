@@ -1,9 +1,8 @@
 package com.service;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.db.DB;
 import com.model.User;
@@ -22,8 +21,8 @@ public class UserServiceImpl implements UserService {
             ps.setString(2, user.getUsername());
             ps.setString(3, user.getPassword());
 
-            ps.executeUpdate();
-            System.out.println("User registered successfully!");
+            int result = ps.executeUpdate();
+            System.out.println("Inserted rows: " + result);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -32,25 +31,51 @@ public class UserServiceImpl implements UserService {
 
     // LOGIN USER
     @Override
-    public boolean login(String Uname, String psw) {
+    public boolean login(String username, String password) {
         String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
 
         try (Connection conn = DB.getConnect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, Uname);
-            ps.setString(2, psw);
+            ps.setString(1, username);
+            ps.setString(2, password);
 
             ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) {
-                return true; 
+            return rs.next(); // clean way
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+   
+    @Override
+    public List<User> getAllUsers() {
+
+        List<User> ulist = new ArrayList<>();
+        String sql = "SELECT * FROM users";
+
+        try (Connection conn = DB.getConnect();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+            	User u = new User(
+            		    rs.getInt("id"),
+            		    rs.getString("fullname"),
+            		    rs.getString("username"),
+            		    rs.getString("password")
+            		);
+                ulist.add(u);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return false; 
+        return ulist;
     }
 }

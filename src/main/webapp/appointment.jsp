@@ -1,78 +1,103 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 
+<!-- ✅ JSTL CORE TAG -->
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
 <html>
 <head>
 <title>Appointment</title>
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body class="container mt-5">
 
-<h3>Appointment</h3>
+<h3 class="mb-3">Appointment</h3>
 
-<form action ="AppointmentServlets" method="post">
-      <select name="doctor" class="form-control mb-2">
-    <option value="">Select Doctor</option>
+<!-- ================= FORM ================= -->
+<form action="AppointmentServlets" method="post" class="card p-3 mb-4">
 
-    <c:forEach var="d" items="${doctorList}">
-        <option value="${d.name}">
-            ${d.name} - ${d.specialization}
-        </option>
-    </c:forEach>
+    <!-- Hidden fields -->
+    <input type="hidden" name="id" value="${editData.id}">
+    <input type="hidden" name="action"
+           value="${editData != null ? 'update' : 'add'}">
 
-</select>
+    <!-- Doctor Dropdown -->
+    <select name="doctor" class="form-control mb-2">
+        <option value="">Select Doctor</option>
 
-    <input type="date" name="date" class="form-control mb-2">
+        <c:forEach var="d" items="${doctorList}">
+            <option value="${d.name}"
+                <c:if test="${editData != null && d.name eq editData.doctor}">
+                    selected
+                </c:if>>
+                ${d.name} - ${d.specialization}
+            </option>
+        </c:forEach>
+    </select>
 
-    <input type="text" name="slot" class="form-control mb-2" placeholder="Slots">
+    <!-- Date -->
+    <input type="date" name="date" class="form-control mb-2"
+           value="${editData.date}">
 
-    <textarea name="details" class="form-control mb-2" placeholder="Details"></textarea>
+    <!-- Slot -->
+    <input type="text" name="slot" class="form-control mb-2"
+           placeholder="Slots"
+           value="${editData.slot}">
 
-    <button class="btn btn-warning">Book</button>
+    <!-- Details -->
+    <textarea name="details" class="form-control mb-2"
+              placeholder="Details">${editData.details}</textarea>
 
+    <button class="btn btn-warning">
+        <c:choose>
+            <c:when test="${editData != null}">
+                Update Appointment
+            </c:when>
+            <c:otherwise>
+                Book Appointment
+            </c:otherwise>
+        </c:choose>
+    </button>
 
 </form>
 
-<hr>
-
+<!-- ================= TABLE ================= -->
 <h4>Appointment List</h4>
 
-<table class="table table-bordered">
-    <thead>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
         <tr>
             <th>Doctor</th>
             <th>Date</th>
             <th>Slot</th>
             <th>Details</th>
+            <th>Action</th>
         </tr>
     </thead>
 
     <tbody>
+        <c:forEach var="a" items="${list}">
+            <tr>
+                <td>${a.doctor}</td>
+                <td>${a.date}</td>
+                <td>${a.slot}</td>
+                <td>${a.details}</td>
 
-    <%
-    java.util.List<com.model.Appointment> list =
-        (java.util.List<com.model.Appointment>) request.getAttribute("list");
+                <td>
+                    <!-- EDIT -->
+                    <a href="AppointmentServlets?editId=${a.id}"
+                       class="btn btn-sm btn-primary">Edit</a>
 
-    if(list != null && !list.isEmpty()){
-        for(com.model.Appointment a : list){
-    %>
-        <tr>
-            <td><%= a.getDoctor() %></td>
-            <td><%= a.getDate() %></td>
-            <td><%= a.getSlot() %></td>
-            <td><%= a.getDetails() %></td>
-        </tr>
-    <%
-        }
-    } else {
-    %>
-        <tr>
-            <td colspan="4" class="text-center">No appointments found</td>
-        </tr>
-    <%
-    }
-    %>
-
+                    <!-- DELETE -->
+                    <a href="AppointmentServlets?deleteId=${a.id}"
+                       class="btn btn-sm btn-danger"
+                       onclick="return confirm('Delete this record?')">
+                       Delete
+                    </a>
+                </td>
+            </tr>
+        </c:forEach>
     </tbody>
 </table>
 

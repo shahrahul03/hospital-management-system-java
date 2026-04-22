@@ -22,14 +22,16 @@
 <div class="col-md-4">
         <a href="RegisterServlets" class="btn btn-primary w-100">Register</a>
     </div>
-
+    
+     </div>
+    
 
     
 
 </div>
 
 
-</div>
+
 
 </body>
 </html>

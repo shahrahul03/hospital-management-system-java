@@ -29,12 +29,20 @@
 
     <div class="col-md-4">
         <a href="AppointmentServlets" class="btn btn-warning w-100">Appointment</a>
+   
+    
+    
+    
+
+</div>
+<div class="col-md-4">
+    <a href="UserListServlets" class="btn btn-warning w-100">User list</a>
     </div>
 
-</div>
 
 
 </div>
+
 
 </body>
 </html>
