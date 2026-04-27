@@ -3,6 +3,7 @@ package com.service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,5 +66,44 @@ public class PatientServiceImpl implements PatientService {
 
 	        return list;
 	    }
+
+	@Override
+	public void updatePatient(Patient p) {
+
+		
+		try {Connection conn = DBConnection.getConnection()	;
+		String sql = "update patient set first_name=?, last_name=?,gender=?,phone=?,date_of_birth=?, address=? where id =? ";
+			PreparedStatement ps =  conn.prepareStatement(sql);
+			ps.setString(1,p.getFirstName());
+			ps.setString(2, p.getLastName());
+			ps.setString(3, p.getGender());
+			ps.setString(4,p.getPhone()	);
+			ps.setString(5, p.getDateOfBirth());
+			ps.setString(6, p.getAddress());
+			ps.setInt(7, p.getId());
+			ps.executeUpdate();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
+
+	@Override
+	public void deletePatient(int id) {
+	
+		Connection conn = DBConnection.getConnection()	;
+		String sql ="delete from patient where id=?";
+		try {
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, id);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
 
 }

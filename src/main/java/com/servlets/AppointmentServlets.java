@@ -18,20 +18,25 @@ public class AppointmentServlets extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 👉 HANDLE GET REQUEST
-     * Used for:
-     * - Display list
-     * - Load edit data
-     * - Delete record
-     */
+    // ================= GET =================
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        
+        HttpSession session = request.getSession(false);
+
+        if (session == null || session.getAttribute("username") == null) {
+
+            HttpSession newSession = request.getSession();
+            newSession.setAttribute("redirectAfterLogin", "AppointmentServlets");
+
+            response.sendRedirect("LoginServlet");
+            return;
+        }
+
         AppointmentService service = new AppointmentServiceImpl();
 
-        // ================= DELETE LOGIC =================
-        // If deleteId comes in URL → delete record
+        // ================= DELETE =================
         String deleteId = request.getParameter("deleteId");
 
         if (deleteId != null && !deleteId.isEmpty()) {
@@ -39,22 +44,19 @@ public class AppointmentServlets extends HttpServlet {
 
             service.deleteAppointment(id);
 
-            // redirect to refresh list after delete
             response.sendRedirect("AppointmentServlets");
             return;
         }
 
-        // ================= FETCH ALL APPOINTMENTS =================
+        // ================= FETCH =================
         List<Appointment> list = service.getAllAppointments();
         request.setAttribute("list", list);
 
-        // ================= LOAD DOCTORS =================
+        // ================= DOCTOR LIST =================
         DoctorService docService = new DoctorServiceImpl();
-        List<Doctor> doctors = docService.getAllDoctors();
-        request.setAttribute("doctorList", doctors);
+        request.setAttribute("doctorList", docService.getAllDoctors());
 
-        // ================= EDIT LOGIC =================
-        // If editId exists → send that record to JSP
+        // ================= EDIT =================
         String editId = request.getParameter("editId");
 
         if (editId != null && !editId.isEmpty()) {
@@ -68,18 +70,24 @@ public class AppointmentServlets extends HttpServlet {
             }
         }
 
-        // ================= FORWARD TO JSP =================
         request.getRequestDispatcher("appointment.jsp").forward(request, response);
     }
 
-    /**
-     * 👉 HANDLE POST REQUEST
-     * Used for:
-     * - Add new appointment
-     * - Update existing appointment
-     */
+    // ================= POST =================
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        // 🔐 SECURITY + STORE URL
+        HttpSession session = request.getSession(false);
+
+        if (session == null || session.getAttribute("username") == null) {
+
+            HttpSession newSession = request.getSession();
+            newSession.setAttribute("redirectAfterLogin", "AppointmentServlets");
+
+            response.sendRedirect("login.jsp");
+            return;
+        }
 
         String action = request.getParameter("action");
 
@@ -95,11 +103,9 @@ public class AppointmentServlets extends HttpServlet {
 
             request.setAttribute("message", "All fields required");
 
-            // reload doctors
             DoctorService docService = new DoctorServiceImpl();
             request.setAttribute("doctorList", docService.getAllDoctors());
 
-            // reload appointment list
             AppointmentService service = new AppointmentServiceImpl();
             request.setAttribute("list", service.getAllAppointments());
 
@@ -109,32 +115,27 @@ public class AppointmentServlets extends HttpServlet {
 
         AppointmentService service = new AppointmentServiceImpl();
 
-        // ================= CREATE OBJECT =================
         Appointment a = new Appointment();
         a.setDoctor(doctor);
         a.setDate(date);
         a.setSlot(slot);
         a.setDetails(details);
 
-        // ================= UPDATE LOGIC =================
+        // ================= UPDATE =================
         if ("update".equals(action)) {
 
             String idStr = request.getParameter("id");
 
             if (idStr != null && !idStr.isEmpty()) {
-                int id = Integer.parseInt(idStr);
-                a.setId(id);
-
+                a.setId(Integer.parseInt(idStr));
                 service.updateAppointment(a);
             }
 
         } else {
-            // ================= ADD LOGIC =================
+            // ================= ADD =================
             service.addAppointment(a);
         }
 
-        // ================= REDIRECT =================
-        // Prevent form resubmission issue
         response.sendRedirect("AppointmentServlets");
     }
 }

@@ -11,6 +11,7 @@
 </head>
 
 <body class="container mt-5">
+<jsp:include page="menu.jsp" />
 
 <h3 class="mb-3">Appointment</h3>
 

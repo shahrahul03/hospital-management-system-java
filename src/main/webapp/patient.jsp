@@ -1,5 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 
+<!-- ✅ JSTL -->
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
 <html>
 <head>
 <title>Patient</title>
@@ -7,26 +10,52 @@
 </head>
 
 <body class="container mt-5">
+<jsp:include page="menu.jsp" />
 
 <h3>Patient Registration</h3>
 
-<form action="PatientServlets" method="post">
+<form action="PatientServlets" method="post" class="card p-3 mb-4">
 
-    <input name="firstName" class="form-control mb-2" placeholder="First Name">
+    <!-- 🔥 Hidden fields for update -->
+    <input type="hidden" name="id" value="${editData.id}">
+    <input type="hidden" name="action"
+           value="${editData != null ? 'update' : 'add'}">
 
-    <input name="lastName" class="form-control mb-2" placeholder="Last Name">
+    <!-- First Name -->
+    <input name="firstName" class="form-control mb-2" placeholder="First Name"
+           value="${editData.firstName}">
 
+    <!-- Last Name -->
+    <input name="lastName" class="form-control mb-2" placeholder="Last Name"
+           value="${editData.lastName}">
+
+    <!-- Gender -->
     Gender:
-    <input type="radio" name="gender" value="Male"> M
-    <input type="radio" name="gender" value="Female"> F
+    <input type="radio" name="gender" value="Male"
+        <c:if test="${editData.gender eq 'Male'}">checked</c:if>> M
 
-    <input name="phone" class="form-control mb-2" placeholder="Phone">
+    <input type="radio" name="gender" value="Female"
+        <c:if test="${editData.gender eq 'Female'}">checked</c:if>> F
 
-    <input type="date" name="dateOfBirth" class="form-control mb-2">
+    <!-- Phone -->
+    <input name="phone" class="form-control mb-2" placeholder="Phone"
+           value="${editData.phone}">
 
-    <textarea name="address" class="form-control mb-2" placeholder="Address"></textarea>
+    <!-- Date -->
+    <input type="date" name="dateOfBirth" class="form-control mb-2"
+           value="${editData.dateOfBirth}">
 
-    <button class="btn btn-success">Register</button>
+    <!-- Address -->
+    <textarea name="address" class="form-control mb-2"
+              placeholder="Address">${editData.address}</textarea>
+
+    <!-- Button -->
+    <button class="btn btn-success">
+        <c:choose>
+            <c:when test="${editData != null}">Update</c:when>
+            <c:otherwise>Register</c:otherwise>
+        </c:choose>
+    </button>
 
 </form>
 
@@ -43,36 +72,43 @@
             <th>Phone</th>
             <th>Date of Birth</th>
             <th>Address</th>
+            <th>Action</th>
         </tr>
     </thead>
 
     <tbody>
 
-    <%
-    java.util.List<com.model.Patient> list =
-        (java.util.List<com.model.Patient>) request.getAttribute("list");
+    <!-- 🔥 JSTL LOOP -->
+    <c:forEach var="p" items="${list}">
+        <tr>
+            <td>${p.firstName}</td>
+            <td>${p.lastName}</td>
+            <td>${p.gender}</td>
+            <td>${p.phone}</td>
+            <td>${p.dateOfBirth}</td>
+            <td>${p.address}</td>
 
-    if(list != null && !list.isEmpty()){
-        for(com.model.Patient p : list){
-    %>
-        <tr>
-            <td><%= p.getFirstName() %></td>
-            <td><%= p.getLastName() %></td>
-            <td><%= p.getGender() %></td>
-            <td><%= p.getPhone() %></td>
-            <td><%= p.getDateOfBirth() %></td>
-            <td><%= p.getAddress() %></td>
+            <td>
+                <!-- EDIT -->
+                <a href="PatientServlets?editId=${p.id}"
+                   class="btn btn-sm btn-warning">Edit</a>
+
+                <!-- DELETE -->
+                <a href="PatientServlets?deleteId=${p.id}"
+                   class="btn btn-sm btn-danger"
+                   onclick="return confirm('Delete this patient?')">
+                   Delete
+                </a>
+            </td>
         </tr>
-    <%
-        }
-    } else {
-    %>
+    </c:forEach>
+
+    <!-- EMPTY CASE -->
+    <c:if test="${empty list}">
         <tr>
-            <td colspan="6" class="text-center">No patients found</td>
+            <td colspan="7" class="text-center">No patients found</td>
         </tr>
-    <%
-    }
-    %>
+    </c:if>
 
     </tbody>
 </table>

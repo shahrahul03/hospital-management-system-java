@@ -1,5 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 
+<!-- ✅ JSTL -->
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
 <html>
 <head>
 <title>Doctor</title>
@@ -7,33 +10,70 @@
 </head>
 
 <body class="container mt-5">
+<jsp:include page="menu.jsp" />
 
 <h3>Doctor Form</h3>
 
-<form action="DoctorServlets" method="post">
+<form action="DoctorServlets" method="post" class="card p-3 mb-4">
 
-    <input name="name" class="form-control mb-2" placeholder="Name">
+    <!-- 🔥 Hidden fields for update -->
+    <input type="hidden" name="id" value="${editData.id}">
+    <input type="hidden" name="action"
+           value="${editData != null ? 'update' : 'add'}">
 
-    <input name="email" class="form-control mb-2" placeholder="Email">
+    <!-- Name -->
+    <input name="name" class="form-control mb-2" placeholder="Name"
+           value="${editData.name}">
 
+    <!-- Email -->
+    <input name="email" class="form-control mb-2" placeholder="Email"
+           value="${editData.email}">
+
+    <!-- Specialization -->
     <select name="specialization" class="form-control mb-2">
         <option value="">Select Specialization</option>
-        <option>Cardiology</option>
-        <option>Neurology</option>
-        <option>Orthopedic</option>
+
+        <option value="Cardiology"
+            <c:if test="${editData.specialization eq 'Cardiology'}">selected</c:if>>
+            Cardiology
+        </option>
+
+        <option value="Neurology"
+            <c:if test="${editData.specialization eq 'Neurology'}">selected</c:if>>
+            Neurology
+        </option>
+
+        <option value="Orthopedic"
+            <c:if test="${editData.specialization eq 'Orthopedic'}">selected</c:if>>
+            Orthopedic
+        </option>
     </select>
 
-    <textarea name="address" class="form-control mb-2" placeholder="Address"></textarea>
+    <!-- Address -->
+    <textarea name="address" class="form-control mb-2"
+              placeholder="Address">${editData.address}</textarea>
 
-    <input name="mobile" class="form-control mb-2" placeholder="Mobile">
+    <!-- Mobile -->
+    <input name="mobile" class="form-control mb-2" placeholder="Mobile"
+           value="${editData.mobile}">
 
+    <!-- Gender -->
     Gender:
-    <input type="radio" name="gender" value="Male"> M
-    <input type="radio" name="gender" value="Female"> F
+    <input type="radio" name="gender" value="Male"
+        <c:if test="${editData.gender eq 'Male'}">checked</c:if>> M
+
+    <input type="radio" name="gender" value="Female"
+        <c:if test="${editData.gender eq 'Female'}">checked</c:if>> F
 
     <br>
 
-    <button class="btn btn-primary mt-3">Save</button>
+    <!-- Button -->
+    <button class="btn btn-primary mt-3">
+        <c:choose>
+            <c:when test="${editData != null}">Update</c:when>
+            <c:otherwise>Save</c:otherwise>
+        </c:choose>
+    </button>
 
 </form>
 
@@ -50,36 +90,43 @@
             <th>Address</th>
             <th>Mobile</th>
             <th>Gender</th>
+            <th>Action</th>
         </tr>
     </thead>
 
     <tbody>
 
-    <%
-    java.util.List<com.model.Doctor> list =
-        (java.util.List<com.model.Doctor>) request.getAttribute("list");
+    <!-- 🔥 JSTL LOOP -->
+    <c:forEach var="d" items="${list}">
+        <tr>
+            <td>${d.name}</td>
+            <td>${d.email}</td>
+            <td>${d.specialization}</td>
+            <td>${d.address}</td>
+            <td>${d.mobile}</td>
+            <td>${d.gender}</td>
 
-    if(list != null && !list.isEmpty()){
-        for(com.model.Doctor d : list){
-    %>
-        <tr>
-            <td><%= d.getName() %></td>
-            <td><%= d.getEmail() %></td>
-            <td><%= d.getSpecialization() %></td>
-            <td><%= d.getAddress() %></td>
-            <td><%= d.getMobile() %></td>
-            <td><%= d.getGender() %></td>
+            <td>
+                <!-- EDIT -->
+                <a href="DoctorServlets?editId=${d.id}"
+                   class="btn btn-sm btn-warning">Edit</a>
+
+                <!-- DELETE -->
+                <a href="DoctorServlets?deleteId=${d.id}"
+                   class="btn btn-sm btn-danger"
+                   onclick="return confirm('Delete this doctor?')">
+                   Delete
+                </a>
+            </td>
         </tr>
-    <%
-        }
-    } else {
-    %>
+    </c:forEach>
+
+    <!-- EMPTY CASE -->
+    <c:if test="${empty list}">
         <tr>
-            <td colspan="6" class="text-center">No doctors found</td>
+            <td colspan="7" class="text-center">No doctors found</td>
         </tr>
-    <%
-    }
-    %>
+    </c:if>
 
     </tbody>
 </table>

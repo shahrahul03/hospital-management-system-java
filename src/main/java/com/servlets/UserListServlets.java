@@ -8,6 +8,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import com.model.User;
 import com.service.UserService;
@@ -18,41 +19,39 @@ import com.service.UserServiceImpl;
  */
 @WebServlet("/UserListServlets")
 public class UserListServlets extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-    public UserListServlets() {
-        super();
-        // TODO Auto-generated constructor stub
+
+    private static final long serialVersionUID = 1L;
+
+    // ================= GET =================
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // 🔐 SECURITY + STORE URL
+        HttpSession session = request.getSession(false);
+
+        if (session == null || session.getAttribute("username") == null) {
+            HttpSession newSession = request.getSession();
+            newSession.setAttribute("redirectAfterLogin", "UserListServlets");
+
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        // ================= FETCH USERS =================
+        UserService service = new UserServiceImpl();
+        List<User> list = service.getAllUsers();
+
+        request.setAttribute("ulist", list);
+
+        request.getRequestDispatcher("UserListForm.jsp").forward(request, response);
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-		   UserService service = new UserServiceImpl();
-		    List<User> list = service.getAllUsers();
+    // ================= POST =================
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-		    System.out.println("User size: " + list.size());
-
-		    request.setAttribute("ulist", list);
-
-		    request.getRequestDispatcher("UserListForm.jsp").forward(request, response);
-		
-		request.getRequestDispatcher("UserListForm.jsp").forward(request, response);
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-	        throws ServletException, IOException {
-
-		
-	}
-
+        // 👉 simply reuse GET
+        doGet(request, response);
+    }
 }
+

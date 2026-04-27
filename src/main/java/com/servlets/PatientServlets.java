@@ -2,73 +2,130 @@ package com.servlets;
 
 import java.io.IOException;
 import java.util.List;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import com.service.PatientService;
+import javax.servlet.http.*;
+
 import com.model.Patient;
+import com.service.PatientService;
 import com.service.PatientServiceImpl;
 
-/**
- * Servlet implementation class Patient
- */
 @WebServlet("/PatientServlets")
 public class PatientServlets extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-    public PatientServlets() {
-        super();
-        // TODO Auto-generated constructor stub
+    private static final long serialVersionUID = 1L;
+
+    // ================= GET =================
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // 🔐 SECURITY + STORE URL
+        HttpSession session = request.getSession(false);
+
+        if (session == null || session.getAttribute("username") == null) {
+            HttpSession newSession = request.getSession();
+            newSession.setAttribute("redirectAfterLogin", "PatientServlets");
+
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        PatientService service = new PatientServiceImpl();
+
+        // ================= DELETE =================
+        String deleteId = request.getParameter("deleteId");
+
+        if (deleteId != null && !deleteId.isEmpty()) {
+            int id = Integer.parseInt(deleteId);
+
+            service.deletePatient(id);
+
+            response.sendRedirect("PatientServlets");
+            return;
+        }
+
+        // ================= FETCH =================
+        List<Patient> list = service.getAllPatients();
+        request.setAttribute("list", list);
+
+        // ================= EDIT =================
+        String editId = request.getParameter("editId");
+
+        if (editId != null && !editId.isEmpty()) {
+            int id = Integer.parseInt(editId);
+
+            for (Patient p : list) {
+                if (p.getId() == id) {
+                    request.setAttribute("editData", p);
+                    break;
+                }
+            }
+        }
+
+        request.getRequestDispatcher("patient.jsp").forward(request, response);
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
+    // ================= POST =================
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // 🔐 SECURITY + STORE URL
+        HttpSession session = request.getSession(false);
+
+        if (session == null || session.getAttribute("username") == null) {
+            HttpSession newSession = request.getSession();
+            newSession.setAttribute("redirectAfterLogin", "PatientServlets");
+
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        String action = request.getParameter("action");
+
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        String gender = request.getParameter("gender");
+        String phone = request.getParameter("phone");
+        String dateOfBirth = request.getParameter("dateOfBirth");
+        String address = request.getParameter("address");
+
+        // ================= VALIDATION =================
+        if (firstName == null || firstName.isEmpty() ||
+            lastName == null || lastName.isEmpty()) {
+
+            request.setAttribute("message", "Required fields missing");
+
+            PatientService service = new PatientServiceImpl();
+            request.setAttribute("list", service.getAllPatients());
+
+            request.getRequestDispatcher("patient.jsp").forward(request, response);
+            return;
+        }
+
         PatientService service = new PatientServiceImpl();
-        List<Patient> list = service.getAllPatients();
 
-        request.setAttribute("list", list);
-        request.getRequestDispatcher("patient.jsp").forward(request, response);
-	}
+        Patient p = new Patient();
+        p.setFirstName(firstName);
+        p.setLastName(lastName);
+        p.setGender(gender);
+        p.setPhone(phone);
+        p.setDateOfBirth(dateOfBirth);
+        p.setAddress(address);
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-		 String firstName = request.getParameter("firstName");
-	        String lastName = request.getParameter("lastName");
-	        String gender = request.getParameter("gender");
-	        String phone = request.getParameter("phone");
-	        String dateOfBirth = request.getParameter("dateOfBirth");
-	        String address = request.getParameter("address");
+        // ================= UPDATE =================
+        if ("update".equals(action)) {
 
-	        // validation
-	        if (firstName == null || firstName.isEmpty() ||
-	            lastName == null || lastName.isEmpty()) {
+            String idStr = request.getParameter("id");
 
-	            request.setAttribute("message", "Required fields missing");
-	            request.getRequestDispatcher("patient.jsp").forward(request, response);
-	            return;
-	        }
+            if (idStr != null && !idStr.isEmpty()) {
+                p.setId(Integer.parseInt(idStr));
+                service.updatePatient(p);
+            }
 
-	        Patient p = new Patient(0, firstName, lastName, gender, phone, dateOfBirth, address);
+        } else {
+            // ================= ADD =================
+            service.addPatient(p);
+        }
 
-	        PatientService service = new PatientServiceImpl();
-	        service.addPatient(p);
-
-	        // redirect to refresh page
-	        response.sendRedirect("patient");
-	}
-
+        response.sendRedirect("PatientServlets");
+    }
 }
